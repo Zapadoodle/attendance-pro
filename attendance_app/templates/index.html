@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12 text-center">
+        <h1 class="display-4 fw-bold text-primary mb-3">
+            <i class="fas fa-graduation-cap"></i> Welcome to Attendance Pro & Detention Prevention
+        </h1>
+        <p class="lead text-muted">Your Complete Attendance Management Solution</p>
+    </div>
+</div>
+
+<div class="row g-4">
+    {% if current_user.is_authenticated %}
+    <!-- Global Attendance Overview -->
+    <div class="col-12 mb-2">
+        <div class="card shadow-lg border-0 hover-effect bg-light">
+            <div class="card-body p-4 text-center">
+                <h3 class="mb-4 text-primary"><i class="fas fa-chart-line me-2"></i> Your Global Attendance</h3>
+                {% set pct = current_user.percentage %}
+                <div class="d-flex justify-content-center mb-3">
+                    <div class="position-relative" style="width: 150px; height: 150px;">
+                        <svg class="w-100 h-100" viewBox="0 0 36 36">
+                            <path class="text-white" stroke-dasharray="100, 100"
+                                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                                fill="none" stroke="currentColor" stroke-width="3.8" />
+                            <path
+                                class="{% if pct >= 75 %}text-success{% elif pct >= 65 %}text-warning{% else %}text-danger{% endif %}"
+                                stroke-dasharray="{{ pct }}, 100"
+                                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                                fill="none" stroke="currentColor" stroke-width="3.8" stroke-linecap="round" />
+                        </svg>
+                        <div class="position-absolute top-50 start-50 translate-middle text-center">
+                            <h3 class="mb-0 fw-bold">{{ "%.1f"|format(pct) }}%</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="d-flex justify-content-center gap-4">
+                    <div>
+                        <small class="text-muted d-block">Total</small>
+                        <span class="fw-bold fs-5">{{ current_user.total_classes }}</span>
+                    </div>
+                    <div class="border-end"></div>
+                    <div>
+                        <small class="text-muted d-block">Attended</small>
+                        <span class="fw-bold fs-5 text-primary">{{ current_user.attended_classes }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Card 1: Current Attendance -->
+    <div class="col-md-4">
+        <div class="card h-100 shadow-lg border-0 hover-effect">
+            <div class="card-body text-center p-4">
+                <div class="feature-icon bg-primary bg-gradient text-white rounded-circle mb-3 mx-auto d-flex align-items-center justify-content-center"
+                    style="width: 80px; height: 80px;">
+                    <i class="fas fa-chart-pie fa-3x"></i>
+                </div>
+                <h3 class="card-title h4 mb-3">Current Attendance</h3>
+                <p class="card-text text-muted mb-4">
+                    Check your current attendance percentage instantly. Just enter your total classes and attended
+                    classes.
+                </p>
+                <ul class="list-unstyled text-start mb-4">
+                    <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i> Real-time calculation</li>
+                    <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i> Percentage breakdown</li>
+                    <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i> Visual progress bar</li>
+                </ul>
+                <a href="/current-attendance" class="btn btn-primary btn-lg w-100">
+                    Check Now <i class="fas fa-arrow-right ms-2"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card 2: Predict to 75% -->
+    <div class="col-md-4">
+        <div class="card h-100 shadow-lg border-0 hover-effect">
+            <div class="card-body text-center p-4">
+                <div class="feature-icon bg-success bg-gradient text-white rounded-circle mb-3 mx-auto d-flex align-items-center justify-content-center"
+                    style="width: 80px; height: 80px;">
+                    <i class="fas fa-bullseye fa-3x"></i>
+                </div>
+                <h3 class="card-title h4 mb-3">Predict to 75%</h3>
+                <p class="card-text text-muted mb-4">
+                    Calculate how many more classes you need to attend to reach your target attendance.
+                </p>
+                <ul class="list-unstyled text-start mb-4">
+                    <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i> Custom target percentage</li>
+                    <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i> Live calculations</li>
+                    <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i> Detailed breakdown</li>
+                </ul>
+                <a href="/predict-attendance" class="btn btn-success btn-lg w-100">
+                    Calculate Now <i class="fas fa-calculator ms-2"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card 3: Leave Calendar -->
+    <div class="col-md-4">
+        <div class="card h-100 shadow-lg border-0 hover-effect">
+            <div class="card-body text-center p-4">
+                <div class="feature-icon bg-warning bg-gradient text-white rounded-circle mb-3 mx-auto d-flex align-items-center justify-content-center"
+                    style="width: 80px; height: 80px;">
+                    <i class="fas fa-calendar-alt fa-3x"></i>
+                </div>
+                <h3 class="card-title h4 mb-3">Leave Calendar</h3>
+                <p class="card-text text-muted mb-4">
+                    Mark your upcoming leaves on an interactive calendar and plan your attendance better.
+                </p>
+                <ul class="list-unstyled text-start mb-4">
+                    <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i> Interactive calendar</li>
+                    <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i> Mark/unmark leaves</li>
+                    <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i> Visual leave tracking</li>
+                </ul>
+                <a href="/leave-calendar" class="btn btn-warning btn-lg w-100">
+                    Open Calendar <i class="fas fa-arrow-right ms-2"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Additional Features Section -->
+<div class="row mt-5">
+    <div class="col-12">
+        <div class="card shadow-lg border-0">
+            <div class="card-body p-4">
+                <h3 class="text-center mb-4">Why Choose Attendance Pro & Detention Prevention?</h3>
+                <div class="row g-4">
+                    <div class="col-md-3 col-6 text-center">
+                        <i class="fas fa-bolt fa-3x text-primary mb-3"></i>
+                        <h5>Lightning Fast</h5>
+                    </div>
+                    <div class="col-md-3 col-6 text-center">
+                        <i class="fas fa-shield-alt fa-3x text-success mb-3"></i>
+                        <h5>Secure & Private</h5>
+                    </div>
+                    <div class="col-md-3 col-6 text-center">
+                        <i class="fas fa-mobile-alt fa-3x text-warning mb-3"></i>
+                        <h5>Mobile Friendly</h5>
+                    </div>
+                    <div class="col-md-3 col-6 text-center">
+                        <i class="fas fa-chart-line fa-3x text-info mb-3"></i>
+                        <h5>Track Progress</h5>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Removed Chart.js Logic as it's no longer applicable for a single global metric -->
+
+{% endblock %}

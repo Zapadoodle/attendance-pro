@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <div class="card shadow mb-4">
+            <div class="card-header bg-success text-white">
+                <h3 class="mb-0"><i class="fas fa-chart-bar"></i> Calculation Results</h3>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card mb-3">
+                            <div class="card-header bg-light">Current Status</div>
+                            <div class="card-body">
+                                <p><strong>Total Classes:</strong> {{ total_classes }}</p>
+                                <p><strong>Attended Classes:</strong> {{ attended_classes }}</p>
+                                <p><strong>Current Percentage:</strong> 
+                                    <span class="badge bg-{% if current_percentage >= 75 %}success{% elif current_percentage >= 50 %}warning{% else %}danger{% endif %}">
+                                        {{ current_percentage }}%
+                                    </span>
+                                </p>
+                                <p><strong>Target Percentage:</strong> 
+                                    <span class="badge bg-primary">{{ target_percentage }}%</span>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card mb-3">
+                            <div class="card-header bg-light">Calculation Result</div>
+                            <div class="card-body">
+                                {% if result.error %}
+                                    <div class="alert alert-danger">
+                                        <i class="fas fa-exclamation-triangle"></i> {{ result.error }}
+                                    </div>
+                                {% else %}
+                                    <h4 class="text-center mb-4">
+                                        <span class="badge bg-primary rounded-pill p-3 display-6">
+                                            {{ result.required_classes }}
+                                        </span><br>
+                                        <small>Classes Required</small>
+                                    </h4>
+                                    
+                                    <div class="alert alert-success">
+                                        <i class="fas fa-check-circle"></i> <strong>{{ result.message }}</strong>
+                                    </div>
+                                    
+                                    <p><strong>After attending {{ result.required_classes }} more classes:</strong></p>
+                                    <ul>
+                                        <li>New Total: {{ result.new_total_classes }} classes</li>
+                                        <li>New Attended: {{ result.new_attended_classes }} classes</li>
+                                        <li>New Percentage: 
+                                            <span class="badge bg-success">{{ result.new_percentage }}%</span>
+                                        </li>
+                                    </ul>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Progress Bars -->
+                <div class="card mb-4">
+                    <div class="card-header bg-light">Visual Progress</div>
+                    <div class="card-body">
+                        <p class="mb-2">Current Attendance: {{ current_percentage }}%</p>
+                        <div class="progress mb-3" style="height: 30px;">
+                            <div class="progress-bar {% if current_percentage >= 75 %}bg-success{% elif current_percentage >= 50 %}bg-warning{% else %}bg-danger{% endif %}" 
+                                 role="progressbar" 
+                                 style="width: {{ current_percentage }}%;"
+                                 aria-valuenow="{{ current_percentage }}" 
+                                 aria-valuemin="0" 
+                                 aria-valuemax="100">
+                                {{ current_percentage }}%
+                            </div>
+                        </div>
+                        
+                        {% if not result.error %}
+                        <p class="mb-2">After Required Classes: {{ result.new_percentage }}%</p>
+                        <div class="progress" style="height: 30px;">
+                            <div class="progress-bar bg-success" 
+                                 role="progressbar" 
+                                 style="width: {{ result.new_percentage }}%;"
+                                 aria-valuenow="{{ result.new_percentage }}" 
+                                 aria-valuemin="0" 
+                                 aria-valuemax="100">
+                                {{ result.new_percentage }}%
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+                    <a href="/" class="btn btn-primary me-md-2">
+                        <i class="fas fa-calculator"></i> New Calculation
+                    </a>
+                    <button onclick="window.print()" class="btn btn-outline-secondary">
+                        <i class="fas fa-print"></i> Print Results
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Tips Section -->
+        <div class="card shadow">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="fas fa-tips"></i> Tips to Improve Attendance</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="card h-100">
+                            <div class="card-body text-center">
+                                <i class="fas fa-bell text-primary fa-2x mb-3"></i>
+                                <h5>Set Reminders</h5>
+                                <p>Use calendar reminders for all your classes</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card h-100">
+                            <div class="card-body text-center">
+                                <i class="fas fa-users text-success fa-2x mb-3"></i>
+                                <h5>Study Groups</h5>
+                                <p>Join study groups to stay motivated</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card h-100">
+                            <div class="card-body text-center">
+                                <i class="fas fa-calendar-check text-warning fa-2x mb-3"></i>
+                                <h5>Regular Schedule</h5>
+                                <p>Maintain a consistent daily routine</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,165 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <!-- Today's Log Card -->
+    <div class="col-12 mb-4">
+        <div class="card shadow-lg border-0 bg-primary text-white overflow-hidden">
+            <div class="card-body p-4 p-md-5 position-relative">
+                <div class="row align-items-center">
+                    <div class="col-md-7">
+                        <h1 class="display-5 fw-bold mb-2">Today is {{ today_name }}</h1>
+                        <p class="lead mb-4 opacity-75">You have {{ today_classes|length }} classes scheduled for today.</p>
+                        
+                        <div class="d-flex flex-wrap gap-2 mb-4">
+                            {% for cls in today_classes %}
+                            <span class="badge bg-white text-primary rounded-pill px-3 py-2 fs-6 shadow-sm">
+                                <i class="fas fa-book-open me-2"></i>{{ cls.class_label or 'Class' }}
+                            </span>
+                            {% endfor %}
+                            {% if not today_classes %}
+                            <span class="badge bg-white text-primary rounded-pill px-3 py-2 fs-6 opacity-50">
+                                <i>No classes scheduled</i>
+                            </span>
+                            {% endif %}
+                        </div>
+
+                        {% if already_logged %}
+                        <button class="btn btn-light btn-lg px-5 py-3 rounded-pill fw-bold text-success shadow disabled w-100 w-md-auto">
+                            <i class="fas fa-check-double me-2"></i> Attendance Logged
+                        </button>
+                        {% elif not today_classes %}
+                        <button class="btn btn-light btn-lg px-5 py-3 rounded-pill fw-bold text-muted shadow disabled w-100 w-md-auto">
+                            <i class="fas fa-bed me-2"></i> Free Day
+                        </button>
+                        {% else %}
+                        <button id="logAttendanceBtn" class="btn btn-light btn-lg px-5 py-3 rounded-pill fw-bold text-primary shadow hover-lift w-100 w-md-auto transition-all">
+                            <i class="fas fa-check-circle me-2"></i> Check-in for Today
+                        </button>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-5 d-none d-md-block text-end">
+                        <i class="fas fa-calendar-check fa-10x opacity-25"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Weekly Schedule (Formerly Timetable) -->
+    <div class="col-lg-8">
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+                <h5 class="mb-0 text-dark fw-bold"><i class="fas fa-calendar-week me-2 text-primary"></i>Weekly Schedule</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <tbody>
+                            {% for day_val, day_name in days.items() %}
+                            <tr class="{% if day_name == today_name %}table-primary bg-opacity-10{% endif %}">
+                                <td class="fw-bold align-middle py-4 px-4" style="width: 150px;">
+                                    {{ day_name }}
+                                    {% if day_name == today_name %}<span class="badge bg-primary ms-2 small">Today</span>{% endif %}
+                                </td>
+                                <td class="p-3 align-middle">
+                                    <div class="d-flex flex-wrap gap-2">
+                                    {% if not schedule[day_val] %}
+                                        <span class="text-muted small py-2">No classes</span>
+                                    {% else %}
+                                        {% for entry in schedule[day_val] %}
+                                        <div class="btn-group shadow-sm">
+                                            <span class="badge bg-light text-dark border py-2 px-3 fw-normal fs-6 rounded-start d-flex align-items-center">
+                                                {{ entry.class_label or 'Class' }}
+                                            </span>
+                                            <form method="POST" action="{{ url_for('attendance.delete_timetable_entry', entry_id=entry.id) }}" class="m-0" onsubmit="return confirm('Remove this class?');">
+                                                <button type="submit" class="btn btn-outline-danger btn-sm border py-2 px-2 rounded-end">
+                                                    <i class="fas fa-times"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                        {% endfor %}
+                                    {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Class Sidebar -->
+    <div class="col-lg-4">
+        <div class="card shadow-sm border-0 sticky-top" style="top: 20px;">
+            <div class="card-header bg-dark text-white py-3">
+                <h5 class="mb-0"><i class="fas fa-plus-circle me-2"></i>Add to Schedule</h5>
+            </div>
+            <div class="card-body p-4">
+                <form method="POST">
+                    <div class="mb-4">
+                        <label class="form-label fw-bold small text-uppercase text-muted">Day of week</label>
+                        <select name="day_of_week" class="form-select border-0 bg-light py-2" required>
+                            {% for day_val, day_name in days.items() %}
+                            <option value="{{ day_val }}" {% if day_name == today_name %}selected{% endif %}>{{ day_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="form-label fw-bold small text-uppercase text-muted">Label (Optional)</label>
+                        <input type="text" name="class_label" class="form-control border-0 bg-light py-2" placeholder="e.g. Physics Lab, English...">
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary w-100 py-3 fw-bold rounded shadow-sm">
+                        <i class="fas fa-plus me-2"></i> Add Class
+                    </button>
+                </form>
+            </div>
+            <div class="card-footer bg-light border-0 p-3 text-center">
+                <small class="text-muted"><i class="fas fa-info-circle me-1"></i> These classes will also auto-update nightly at 11:50 PM.</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const logBtn = document.getElementById('logAttendanceBtn');
+    if (logBtn) {
+        logBtn.addEventListener('click', function() {
+            if (confirm('Check-in for today\'s classes? This will update your attendance immediately.')) {
+                fetch('/api/log-attendance', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        location.reload();
+                    } else {
+                        alert(data.message);
+                    }
+                })
+                .catch(err => console.error(err));
+            }
+        });
+    }
+});
+</script>
+
+<style>
+.hover-lift:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
+}
+.transition-all {
+    transition: all 0.2s ease-in-out;
+}
+.badge.bg-white.text-primary {
+    border: 1px solid rgba(13, 110, 253, 0.1);
+}
+</style>
+{% endblock %}
