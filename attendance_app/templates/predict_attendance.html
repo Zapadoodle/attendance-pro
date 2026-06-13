@@ -8,48 +8,73 @@
                 <h3 class="mb-0 text-center"><i class="fas fa-bullseye me-2"></i>Predict Classes to Target</h3>
             </div>
 
-            {% if not current_user.is_authenticated %}
-            <div class="card-body text-center p-5">
-                <div class="alert alert-info border-0 shadow-sm p-4">
-                    <i class="fas fa-info-circle fa-2x mb-3 text-info"></i>
-                    <h5>Login Required</h5>
-                    <p class="mb-3">You need to log in to run attendance predictions.</p>
-                </div>
-            </div>
-            {% else %}
             <div class="card-body p-4 p-md-5">
                 <form method="POST" id="predictForm">
                     <!-- Prediction Details -->
 
                     <h5 class="text-primary mb-3"><i class="fas fa-calendar-alt me-2"></i>Future Expectations</h5>
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="p-3 border rounded bg-light">
+                                <label for="input_mode" class="form-label fw-bold text-dark">Choose Input Type</label>
+                                <select class="form-select" id="input_mode" name="input_mode">
+                                    <option value="classes" {% if input_mode == 'classes' %}selected{% endif %}>Number of Classes</option>
+                                    <option value="days" {% if input_mode == 'days' %}selected{% endif %}>Number of Days</option>
+                                </select>
+                                <div class="form-text mt-2 text-muted small">Choose one option, then fill only that matching field.</div>
+                            </div>
+                        </div>
+                    </div>
                     <div class="row g-4 mb-4">
-                        <div class="col-md-6">
-                            <div class="p-3 border rounded bg-white h-100">
+                        <div class="{% if input_mode == 'classes' %}col-12{% else %}d-none{% endif %}" id="futureClassesCol">
+                            <div class="p-3 border rounded bg-white h-100" id="futureClassesCard">
                                 <label for="future_classes" class="form-label fw-bold text-dark">Expected Future
                                     Classes</label>
                                 <div class="input-group">
                                     <span class="input-group-text bg-light"><i
                                             class="fas fa-calendar-plus text-secondary"></i></span>
                                     <input type="number" class="form-control" id="future_classes" name="future_classes"
-                                        min="0" value="0" placeholder="e.g., 50">
+                                        min="0" value="{{ future_classes_input }}" placeholder="e.g., 50"
+                                        {% if input_mode != 'classes' %}disabled{% endif %}>
                                 </div>
-                                <div class="form-text mt-2 text-muted small">How many more classes are expected in the
-                                    future?</div>
+                                <div class="form-text mt-2 text-muted small">Use this when you want to enter total future classes directly.</div>
                             </div>
                         </div>
 
-                        <div class="col-md-6">
+                        <div class="{% if input_mode == 'days' %}col-12{% else %}d-none{% endif %}" id="expectedDaysCol">
+                            <div class="p-3 border rounded bg-white h-100" id="expectedDaysCard">
+                                <label for="expected_days" class="form-label fw-bold text-dark">Expected Days</label>
+                                <div class="input-group mb-2">
+                                    <span class="input-group-text bg-light"><i
+                                            class="fas fa-calendar-day text-primary"></i></span>
+                                    <input type="number" class="form-control" id="expected_days"
+                                        name="expected_days" min="0" value="{{ expected_days }}"
+                                        placeholder="e.g., 10"
+                                        {% if input_mode != 'days' %}disabled{% endif %}>
+                                </div>
+                                <div class="form-text mt-2 text-muted small">Uses {{ classes_per_day }} classes per day by default.</div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-12">
                             <div class="p-3 border rounded bg-white h-100">
-                                <label for="future_attendance" class="form-label fw-bold text-dark">Expected Classes to
-                                    Attend</label>
+                                <label for="future_attendance" class="form-label fw-bold text-dark" id="futureAttendanceLabel">
+                                    Expected {% if input_mode == 'days' %}Days{% else %}Classes{% endif %} to Attend
+                                </label>
                                 <div class="input-group">
                                     <span class="input-group-text bg-light"><i
                                             class="fas fa-calendar-check text-success"></i></span>
                                     <input type="number" class="form-control" id="future_attendance"
-                                        name="future_attendance" min="0" value="0" placeholder="e.g., 40">
+                                        name="future_attendance" min="0" value="{{ future_attendance }}"
+                                        placeholder="{% if input_mode == 'days' %}e.g., 10{% else %}e.g., 40{% endif %}">
                                 </div>
-                                <div class="form-text mt-2 text-muted small">How many of those future classes will you
-                                    attend?</div>
+                                <div class="form-text mt-2 text-muted small" id="futureAttendanceHelp">
+                                    {% if input_mode == 'days' %}
+                                    How many of those future days will you attend? This will be converted using {{ classes_per_day }} classes per day.
+                                    {% else %}
+                                    How many of those future classes will you attend?
+                                    {% endif %}
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -63,7 +88,8 @@
                                     <span class="input-group-text bg-white"><i
                                             class="fas fa-percent text-success"></i></span>
                                     <input type="number" class="form-control bg-white" id="target_percentage"
-                                        name="target_percentage" min="1" max="100" step="0.1" value="75" required>
+                                        name="target_percentage" min="1" max="100" step="0.1"
+                                        value="{{ target_percentage }}" required>
                                     <button class="btn btn-outline-secondary" type="button"
                                         onclick="document.getElementById('target_percentage').value=75">75%</button>
                                     <button class="btn btn-outline-secondary" type="button"
@@ -200,8 +226,52 @@
                 </div>
                 {% endif %}
             </div>
-            {% endif %}
         </div>
     </div>
 </div>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const inputMode = document.getElementById('input_mode');
+    const futureClasses = document.getElementById('future_classes');
+    const expectedDays = document.getElementById('expected_days');
+    const futureAttendance = document.getElementById('future_attendance');
+    const futureAttendanceLabel = document.getElementById('futureAttendanceLabel');
+    const futureAttendanceHelp = document.getElementById('futureAttendanceHelp');
+    const futureClassesCol = document.getElementById('futureClassesCol');
+    const expectedDaysCol = document.getElementById('expectedDaysCol');
+    const futureClassesCard = document.getElementById('futureClassesCard');
+    const expectedDaysCard = document.getElementById('expectedDaysCard');
+    const classesPerDay = {{ classes_per_day }};
+
+    function syncMode() {
+        const useClasses = inputMode.value === 'classes';
+
+        futureClasses.disabled = !useClasses;
+        expectedDays.disabled = useClasses;
+
+        if (useClasses) {
+            expectedDays.value = 0;
+            futureClassesCol.className = 'col-12';
+            expectedDaysCol.className = 'd-none';
+            futureClassesCard.classList.add('border-primary', 'shadow-sm');
+            expectedDaysCard.classList.remove('border-primary', 'shadow-sm');
+            futureAttendanceLabel.textContent = 'Expected Classes to Attend';
+            futureAttendance.placeholder = 'e.g., 40';
+            futureAttendanceHelp.textContent = 'How many of those future classes will you attend?';
+        } else {
+            futureClasses.value = 0;
+            expectedDaysCol.className = 'col-12';
+            futureClassesCol.className = 'd-none';
+            expectedDaysCard.classList.add('border-primary', 'shadow-sm');
+            futureClassesCard.classList.remove('border-primary', 'shadow-sm');
+            futureAttendanceLabel.textContent = 'Expected Days to Attend';
+            futureAttendance.placeholder = 'e.g., 10';
+            futureAttendanceHelp.textContent = `How many of those future days will you attend? This will be converted using ${classesPerDay} classes per day.`;
+        }
+    }
+
+    inputMode.addEventListener('change', syncMode);
+    syncMode();
+});
+</script>
 {% endblock %}

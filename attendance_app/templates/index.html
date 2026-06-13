@@ -11,13 +11,12 @@
 </div>
 
 <div class="row g-4">
-    {% if current_user.is_authenticated %}
     <!-- Global Attendance Overview -->
     <div class="col-12 mb-2">
         <div class="card shadow-lg border-0 hover-effect bg-light">
             <div class="card-body p-4 text-center">
                 <h3 class="mb-4 text-primary"><i class="fas fa-chart-line me-2"></i> Your Global Attendance</h3>
-                {% set pct = current_user.percentage %}
+                {% set pct = user.percentage %}
                 <div class="d-flex justify-content-center mb-3">
                     <div class="position-relative" style="width: 150px; height: 150px;">
                         <svg class="w-100 h-100" viewBox="0 0 36 36">
@@ -38,18 +37,17 @@
                 <div class="d-flex justify-content-center gap-4">
                     <div>
                         <small class="text-muted d-block">Total</small>
-                        <span class="fw-bold fs-5">{{ current_user.total_classes }}</span>
+                        <span class="fw-bold fs-5">{{ user.total_classes }}</span>
                     </div>
                     <div class="border-end"></div>
                     <div>
                         <small class="text-muted d-block">Attended</small>
-                        <span class="fw-bold fs-5 text-primary">{{ current_user.attended_classes }}</span>
+                        <span class="fw-bold fs-5 text-primary">{{ user.attended_classes }}</span>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    {% endif %}
 
     <!-- Card 1: Current Attendance -->
     <div class="col-md-4">

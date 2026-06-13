@@ -6,7 +6,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Attendance Pro & Detention Prevention</title>
 
-    <!-- PWA Setup -->
     <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
     <meta name="theme-color" content="#0d6efd">
     <link rel="apple-touch-icon" href="{{ url_for('static', filename='images/icon-192x192.png') }}">
@@ -29,12 +28,6 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="/">
-                            <i class="fas fa-home"></i> Home
-                        </a>
-                    </li>
-                    {% if current_user.is_authenticated %}
-                    <li class="nav-item">
                         <a class="nav-link" href="/current-attendance">
                             <i class="fas fa-chart-pie"></i> Current
                         </a>
@@ -54,28 +47,6 @@
                             <i class="fas fa-calendar-alt"></i> Leave Calendar
                         </a>
                     </li>
-                    {% endif %}
-                </ul>
-                <ul class="navbar-nav">
-                    {% if current_user.is_authenticated %}
-                    <li class="nav-item d-flex align-items-center me-3">
-                        <button id="themeToggleBtn"
-                            class="btn btn-outline-light btn-sm rounded-circle p-2 d-flex align-items-center justify-content-center"
-                            style="width: 38px; height: 38px; transition: all 0.3s ease;">
-                            <i class="fas fa-moon" id="themeIcon"></i>
-                        </button>
-                    </li>
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle font-weight-bold text-white" href="#" id="navbarDropdown"
-                            role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="fas fa-user-circle"></i> {{ current_user.username }}
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0" aria-labelledby="navbarDropdown">
-                            <li><a class="dropdown-item text-danger" href="{{ url_for('auth.logout') }}"><i
-                                        class="fas fa-sign-out-alt"></i> Logout</a></li>
-                        </ul>
-                    </li>
-                    {% else %}
                     <li class="nav-item d-flex align-items-center me-3">
                         <button id="themeToggleBtn"
                             class="btn btn-outline-light btn-sm rounded-circle p-2 d-flex align-items-center justify-content-center"
@@ -84,18 +55,10 @@
                         </button>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link text-white fw-bold px-3 py-2 border rounded border-light me-2"
-                            href="{{ url_for('auth.login') }}">
-                            <i class="fas fa-sign-in-alt"></i> Login
+                        <a class="nav-link text-white fw-bold" href="/">
+                            <i class="fas fa-home"></i> Home
                         </a>
                     </li>
-                    <li class="nav-item">
-                        <a class="btn btn-light fw-bold px-3 py-2 text-primary shadow-sm"
-                            href="{{ url_for('auth.register') }}">
-                            <i class="fas fa-user-plus"></i> Register
-                        </a>
-                    </li>
-                    {% endif %}
                 </ul>
             </div>
         </div>
@@ -118,7 +81,7 @@
 
     <footer class="footer mt-auto py-3 bg-light">
         <div class="container text-center">
-            <span class="text-muted">© 2024 Attendance Pro & Detention Prevention - Your Attendance Management
+            <span class="text-muted">&copy; 2024 Attendance Pro & Detention Prevention - Your Attendance Management
                 Partner</span>
         </div>
     </footer>
@@ -132,9 +95,8 @@
         document.addEventListener('DOMContentLoaded', () => {
             const themeToggleBtn = document.getElementById('themeToggleBtn');
             const themeIcon = document.getElementById('themeIcon');
-
-            // Check for saved user preference, if any, on load of the website
             const currentTheme = localStorage.getItem('theme');
+
             if (currentTheme) {
                 document.documentElement.setAttribute('data-theme', currentTheme);
                 if (currentTheme === 'dark') {
@@ -160,7 +122,6 @@
                 });
             }
 
-            // Register Service Worker for PWA
             if ('serviceWorker' in navigator) {
                 navigator.serviceWorker.register("{{ url_for('static', filename='sw.js') }}")
                     .then(function (registration) {

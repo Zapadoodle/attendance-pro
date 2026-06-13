@@ -1,6 +1,7 @@
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
 from datetime import datetime
+from werkzeug.security import generate_password_hash
 
 db = SQLAlchemy()
 
@@ -126,3 +127,15 @@ class AttendanceCalculator:
             "final_percentage": round(final_percentage, 2),
             "target_percentage": target_percentage
         }
+
+
+def get_public_user():
+    user = User.query.filter_by(username='public').first()
+    if user is None:
+        user = User(
+            username='public',
+            password_hash=generate_password_hash('public-access-disabled', method='pbkdf2:sha256')
+        )
+        db.session.add(user)
+        db.session.commit()
+    return user
