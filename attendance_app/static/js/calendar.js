@@ -23,6 +23,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const savedDatesInput = document.getElementById('savedLeaveDates');
     const savedAttendanceInput = document.getElementById('savedAttendance');
+    const todayDateInput = document.getElementById('todayDate');
 
     let absentDates = [];
     let totalClasses = 0;
@@ -46,6 +47,10 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function getTodayDateStr() {
+        if (todayDateInput && todayDateInput.value) {
+            return todayDateInput.value;
+        }
+
         return FullCalendar.formatDate(new Date(), {
             timeZone: 'local',
             year: 'numeric',
@@ -54,12 +59,17 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    function isPastDate(dateStr) {
+        return dateStr < getTodayDateStr();
+    }
+
     try {
         if (savedDatesInput && savedDatesInput.value && savedDatesInput.value !== 'null') {
             absentDates = JSON.parse(savedDatesInput.value);
             if (!Array.isArray(absentDates)) {
                 absentDates = [];
             }
+            absentDates = absentDates.filter(date => !isPastDate(date));
         }
     } catch (e) {
         console.error('Error parsing saved dates:', e);
@@ -156,6 +166,20 @@ document.addEventListener('DOMContentLoaded', function() {
             predictedDisplay.textContent = futurePercent + '%';
             predictedDetails.textContent = `${unitLabel}: ${displayFutureTotal} | ${attendedLabelText}: ${displayFutureAttended} | ${missedLabelText}: ${displayMissed}`;
 
+            // Dynamically style the predicted card to make it highly prominent and color-coded
+            const predictedCard = document.getElementById('predictedAttendanceCard');
+            if (predictedCard) {
+                predictedCard.classList.remove('card-predicted-safe', 'card-predicted-warning', 'card-predicted-danger');
+                const futureVal = parseFloat(futurePercent);
+                if (futureVal >= 75) {
+                    predictedCard.classList.add('card-predicted-safe');
+                } else if (futureVal >= 65) {
+                    predictedCard.classList.add('card-predicted-warning');
+                } else {
+                    predictedCard.classList.add('card-predicted-danger');
+                }
+            }
+
             const drop = (currentPercent - futurePercent).toFixed(1);
             const dropValue = parseFloat(drop);
 
@@ -183,6 +207,12 @@ document.addEventListener('DOMContentLoaded', function() {
             attendanceDetails.textContent = 'Enter your attendance';
             predictedDisplay.textContent = '0%';
             predictedDetails.textContent = 'Enter your attendance';
+            
+            const predictedCard = document.getElementById('predictedAttendanceCard');
+            if (predictedCard) {
+                predictedCard.classList.remove('card-predicted-safe', 'card-predicted-warning', 'card-predicted-danger');
+            }
+            
             impactMessage.innerHTML = '<i class="fas fa-info-circle"></i> Enter your attendance to see impact';
         }
     }
@@ -192,19 +222,20 @@ document.addEventListener('DOMContentLoaded', function() {
         const dayFrame = dayEl.querySelector('.fc-daygrid-day-frame');
         if (!dayTop || !dayFrame) return;
 
-        const existingToday = dayEl.querySelector('.calendar-today-pill');
         const existingAction = dayEl.querySelector('.calendar-day-action');
-        if (existingToday) existingToday.remove();
         if (existingAction) existingAction.remove();
 
         dayEl.classList.toggle('calendar-absent-day', isAbsent(dateStr));
+        dayEl.classList.toggle('calendar-past-day', isPastDate(dateStr));
 
-        if (dateStr === getTodayDateStr()) {
-            const todayPill = document.createElement('span');
-            todayPill.className = 'calendar-today-pill';
-            todayPill.textContent = 'Today';
-            dayTop.appendChild(todayPill);
+        if (isPastDate(dateStr)) {
+            dayEl.setAttribute('aria-disabled', 'true');
+            dayEl.title = 'Past dates cannot be selected';
+            return;
         }
+
+        dayEl.removeAttribute('aria-disabled');
+        dayEl.removeAttribute('title');
 
         const actionBtn = document.createElement('button');
         const absent = isAbsent(dateStr);

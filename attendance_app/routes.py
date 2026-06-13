@@ -104,6 +104,9 @@ def predict_attendance():
             future_attendance,
             target_percentage
         )
+        if not result.get("error"):
+            required_classes = result.get("required_classes", 0)
+            result["required_days"] = (required_classes + classes_per_day - 1) // classes_per_day
         
         return render_template('predict_attendance.html',
                              result=result,
@@ -135,6 +138,7 @@ def leave_calendar():
     leave_dates = [leave.date.isoformat() for leave in leaves]
     return render_template('leave_calendar.html', 
                              leave_dates=leave_dates,
+                             today_date=datetime.now().date().isoformat(),
                              user=user)
 
 @bp.route('/api/save-leave-dates', methods=['POST'])
@@ -151,9 +155,11 @@ def save_leave_dates():
         LeaveDate.query.filter_by(user_id=user.id).delete()
         
         # Add new leaves
-        from datetime import datetime
+        today = datetime.now().date()
         for date_str in dates:
             date_obj = datetime.strptime(date_str, '%Y-%m-%d').date()
+            if date_obj < today:
+                continue
             new_leave = LeaveDate(date=date_obj, user_id=user.id)
             db.session.add(new_leave)
             

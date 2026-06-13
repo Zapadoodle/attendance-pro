@@ -1,234 +1,228 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-10 col-lg-8">
-        <div class="card shadow-lg border-0 mb-4">
-            <div class="card-header bg-success text-white py-3">
-                <h3 class="mb-0 text-center"><i class="fas fa-bullseye me-2"></i>Predict Classes to Target</h3>
+{% set pct = user.percentage %}
+{% set current_gap = target_percentage - pct %}
+
+<section class="predict-console">
+    <div class="predict-header">
+        <div>
+            <div class="d-flex flex-wrap gap-2 mb-3">
+                <span class="status-chip status-success"><i class="fas fa-route"></i> Projection Engine</span>
+                <span class="status-chip neutral"><i class="fas fa-layer-group"></i> {{ classes_per_day }} classes/day</span>
             </div>
+            <h1>Target attendance simulator</h1>
+            <p>Model future classes, planned attendance, and the exact recovery path needed to reach your target.</p>
+        </div>
+        <div class="predict-current">
+            <span>Current</span>
+            <strong>{{ "%.1f"|format(pct) }}%</strong>
+            <small>{% if current_gap > 0 %}{{ "%.1f"|format(current_gap) }}% below target{% else %}Target cleared{% endif %}</small>
+        </div>
+    </div>
 
-            <div class="card-body p-4 p-md-5">
-                <form method="POST" id="predictForm">
-                    <!-- Prediction Details -->
-
-                    <h5 class="text-primary mb-3"><i class="fas fa-calendar-alt me-2"></i>Future Expectations</h5>
-                    <div class="row mb-4">
-                        <div class="col-12">
-                            <div class="p-3 border rounded bg-light">
-                                <label for="input_mode" class="form-label fw-bold text-dark">Choose Input Type</label>
-                                <select class="form-select" id="input_mode" name="input_mode">
-                                    <option value="classes" {% if input_mode == 'classes' %}selected{% endif %}>Number of Classes</option>
-                                    <option value="days" {% if input_mode == 'days' %}selected{% endif %}>Number of Days</option>
-                                </select>
-                                <div class="form-text mt-2 text-muted small">Choose one option, then fill only that matching field.</div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row g-4 mb-4">
-                        <div class="{% if input_mode == 'classes' %}col-12{% else %}d-none{% endif %}" id="futureClassesCol">
-                            <div class="p-3 border rounded bg-white h-100" id="futureClassesCard">
-                                <label for="future_classes" class="form-label fw-bold text-dark">Expected Future
-                                    Classes</label>
-                                <div class="input-group">
-                                    <span class="input-group-text bg-light"><i
-                                            class="fas fa-calendar-plus text-secondary"></i></span>
-                                    <input type="number" class="form-control" id="future_classes" name="future_classes"
-                                        min="0" value="{{ future_classes_input }}" placeholder="e.g., 50"
-                                        {% if input_mode != 'classes' %}disabled{% endif %}>
-                                </div>
-                                <div class="form-text mt-2 text-muted small">Use this when you want to enter total future classes directly.</div>
-                            </div>
-                        </div>
-
-                        <div class="{% if input_mode == 'days' %}col-12{% else %}d-none{% endif %}" id="expectedDaysCol">
-                            <div class="p-3 border rounded bg-white h-100" id="expectedDaysCard">
-                                <label for="expected_days" class="form-label fw-bold text-dark">Expected Days</label>
-                                <div class="input-group mb-2">
-                                    <span class="input-group-text bg-light"><i
-                                            class="fas fa-calendar-day text-primary"></i></span>
-                                    <input type="number" class="form-control" id="expected_days"
-                                        name="expected_days" min="0" value="{{ expected_days }}"
-                                        placeholder="e.g., 10"
-                                        {% if input_mode != 'days' %}disabled{% endif %}>
-                                </div>
-                                <div class="form-text mt-2 text-muted small">Uses {{ classes_per_day }} classes per day by default.</div>
-                            </div>
-                        </div>
-
-                        <div class="col-md-12">
-                            <div class="p-3 border rounded bg-white h-100">
-                                <label for="future_attendance" class="form-label fw-bold text-dark" id="futureAttendanceLabel">
-                                    Expected {% if input_mode == 'days' %}Days{% else %}Classes{% endif %} to Attend
-                                </label>
-                                <div class="input-group">
-                                    <span class="input-group-text bg-light"><i
-                                            class="fas fa-calendar-check text-success"></i></span>
-                                    <input type="number" class="form-control" id="future_attendance"
-                                        name="future_attendance" min="0" value="{{ future_attendance }}"
-                                        placeholder="{% if input_mode == 'days' %}e.g., 10{% else %}e.g., 40{% endif %}">
-                                </div>
-                                <div class="form-text mt-2 text-muted small" id="futureAttendanceHelp">
-                                    {% if input_mode == 'days' %}
-                                    How many of those future days will you attend? This will be converted using {{ classes_per_day }} classes per day.
-                                    {% else %}
-                                    How many of those future classes will you attend?
-                                    {% endif %}
-                                </div>
-                            </div>
+    <div class="row g-4 align-items-start">
+        <div class="col-lg-5">
+            <form method="POST" id="predictForm" class="predict-panel">
+                <div class="panel-section">
+                    <div class="section-heading">
+                        <span class="step-dot">1</span>
+                        <div>
+                            <h2>Forecast window</h2>
+                            <p>Choose whether you think in days or direct class count.</p>
                         </div>
                     </div>
 
-                    <div class="row mb-5">
-                        <div class="col-12">
-                            <div class="p-4 bg-light rounded shadow-sm border">
-                                <label for="target_percentage" class="form-label fw-bold text-primary mb-3"><i
-                                        class="fas fa-bullseye me-2"></i>Your Target Percentage</label>
-                                <div class="input-group input-group-lg">
-                                    <span class="input-group-text bg-white"><i
-                                            class="fas fa-percent text-success"></i></span>
-                                    <input type="number" class="form-control bg-white" id="target_percentage"
-                                        name="target_percentage" min="1" max="100" step="0.1"
-                                        value="{{ target_percentage }}" required>
-                                    <button class="btn btn-outline-secondary" type="button"
-                                        onclick="document.getElementById('target_percentage').value=75">75%</button>
-                                    <button class="btn btn-outline-secondary" type="button"
-                                        onclick="document.getElementById('target_percentage').value=80">80%</button>
-                                    <button class="btn btn-outline-secondary" type="button"
-                                        onclick="document.getElementById('target_percentage').value=85">85%</button>
-                                </div>
-                                <div class="form-text mt-2">Default is 75%, commonly required for colleges.</div>
+                    <label for="input_mode" class="form-label">Input Type</label>
+                    <select class="form-select form-select-lg" id="input_mode" name="input_mode">
+                        <option value="classes" {% if input_mode == 'classes' %}selected{% endif %}>Number of Classes</option>
+                        <option value="days" {% if input_mode == 'days' %}selected{% endif %}>Number of Days</option>
+                    </select>
+                </div>
+
+                <div class="row g-3">
+                    <div class="{% if input_mode == 'classes' %}col-12{% else %}d-none{% endif %}" id="futureClassesCol">
+                        <div class="technical-input" id="futureClassesCard">
+                            <label for="future_classes" class="form-label">Expected Future Classes</label>
+                            <div class="input-group input-group-lg">
+                                <span class="input-group-text"><i class="fas fa-calendar-plus"></i></span>
+                                <input type="number" class="form-control" id="future_classes" name="future_classes"
+                                    min="0" value="{{ future_classes_input }}" placeholder="e.g., 50"
+                                    {% if input_mode != 'classes' %}disabled{% endif %}>
                             </div>
+                            <small>Directly enter your upcoming class load.</small>
                         </div>
                     </div>
 
-                    <div class="d-grid gap-2">
-                        <button type="submit" class="btn btn-success btn-lg py-3 shadow-sm">
-                            <i class="fas fa-magic me-2"></i> Predict Required Classes
-                        </button>
+                    <div class="{% if input_mode == 'days' %}col-12{% else %}d-none{% endif %}" id="expectedDaysCol">
+                        <div class="technical-input" id="expectedDaysCard">
+                            <label for="expected_days" class="form-label">Expected Days</label>
+                            <div class="input-group input-group-lg">
+                                <span class="input-group-text"><i class="fas fa-calendar-day"></i></span>
+                                <input type="number" class="form-control" id="expected_days" name="expected_days"
+                                    min="0" value="{{ expected_days }}" placeholder="e.g., 10"
+                                    {% if input_mode != 'days' %}disabled{% endif %}>
+                            </div>
+                            <small>Converted automatically using {{ classes_per_day }} classes per day.</small>
+                        </div>
                     </div>
-                </form>
 
+                    <div class="col-12">
+                        <div class="technical-input">
+                            <label for="future_attendance" class="form-label" id="futureAttendanceLabel">
+                                Expected {% if input_mode == 'days' %}Days{% else %}Classes{% endif %} to Attend
+                            </label>
+                            <div class="input-group input-group-lg">
+                                <span class="input-group-text"><i class="fas fa-calendar-check"></i></span>
+                                <input type="number" class="form-control" id="future_attendance"
+                                    name="future_attendance" min="0" value="{{ future_attendance }}"
+                                    placeholder="{% if input_mode == 'days' %}e.g., 10{% else %}e.g., 40{% endif %}">
+                            </div>
+                            <small id="futureAttendanceHelp">
+                                {% if input_mode == 'days' %}
+                                How many of those future days will you attend?
+                                {% else %}
+                                How many of those future classes will you attend?
+                                {% endif %}
+                            </small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel-section">
+                    <div class="section-heading">
+                        <span class="step-dot">2</span>
+                        <div>
+                            <h2>Target lock</h2>
+                            <p>Set the percentage you want the simulator to solve for.</p>
+                        </div>
+                    </div>
+
+                    <label for="target_percentage" class="form-label">Target Percentage</label>
+                    <div class="input-group input-group-lg">
+                        <span class="input-group-text"><i class="fas fa-percent"></i></span>
+                        <input type="number" class="form-control" id="target_percentage" name="target_percentage"
+                            min="1" max="100" step="0.1" value="{{ target_percentage }}" required>
+                    </div>
+                    <div class="target-presets mt-3">
+                        <button class="btn btn-outline-light" type="button" onclick="document.getElementById('target_percentage').value=75">75%</button>
+                        <button class="btn btn-outline-light" type="button" onclick="document.getElementById('target_percentage').value=80">80%</button>
+                        <button class="btn btn-outline-light" type="button" onclick="document.getElementById('target_percentage').value=85">85%</button>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-success btn-lg w-100 predict-submit">
+                    <i class="fas fa-microchip me-2"></i> Run Attendance Simulation
+                </button>
+            </form>
+        </div>
+
+        <div class="col-lg-7">
+            <div class="prediction-output">
                 {% if calculated and result %}
-                <div class="mt-5 pt-4 border-top fade-in">
-                    <div class="text-center mb-5">
-                        <h3 class="fw-bold mb-3">Your Global Prediction</h3>
-
-                        {% if result.error %}
-                        <div
-                            class="alert alert-danger shadow-sm border-0 d-flex align-items-center justify-content-center">
-                            <i class="fas fa-exclamation-triangle fa-2x me-3"></i>
-                            <span class="fs-5">{{ result.error }}</span>
+                    {% if result.error %}
+                    <div class="empty-state error-state">
+                        <i class="fas fa-triangle-exclamation"></i>
+                        <h2>Simulation stopped</h2>
+                        <p>{{ result.error }}</p>
+                    </div>
+                    {% else %}
+                    <div class="result-hero">
+                        <div>
+                            <span class="result-kicker">Additional commitment required</span>
+                            <div class="result-number">{{ result.required_classes }}</div>
+                            <p>classes needed beyond your planned {{ result.future_attendance }} of {{ result.future_classes }} future classes.</p>
                         </div>
-                        {% else %}
-                        <div class="display-1 fw-bolder text-success mb-2">{{ result.required_classes }}</div>
-                        <h4 class="text-muted fw-light">Additional classes needed</h4>
-
-                        <div class="alert alert-success shadow-sm border-0 mt-4 d-inline-block px-4 py-3">
-                            <i class="fas fa-lightbulb me-2"></i> {{ result.message }}
+                        <div class="days-dial">
+                            <span>About</span>
+                            <strong>{{ result.required_days }}</strong>
+                            <small>day{% if result.required_days != 1 %}s{% endif %}</small>
                         </div>
-                        {% endif %}
                     </div>
 
-                    {% if not result.error %}
-                    <div class="row g-4 mt-2">
-                        <!-- Current vs Future Cards -->
-                        <div class="col-md-6">
-                            <div class="card h-100 shadow-sm border-0 bg-light">
-                                <div class="card-body p-4">
-                                    <h5 class="card-title text-primary border-bottom pb-2 mb-3"><i
-                                            class="fas fa-history me-2"></i>Current Status</h5>
-                                    <ul class="list-unstyled mb-0">
-                                        <li class="d-flex justify-content-between mb-2">
-                                            <span class="text-muted">Total Classes:</span>
-                                            <span class="fw-bold">{{ result.current_total }}</span>
-                                        </li>
-                                        <li class="d-flex justify-content-between mb-2">
-                                            <span class="text-muted">Attended:</span>
-                                            <span class="fw-bold">{{ result.current_attended }}</span>
-                                        </li>
-                                        <li
-                                            class="d-flex justify-content-between align-items-center pt-2 mt-2 border-top">
-                                            <span class="fw-bold">Percentage:</span>
-                                            <span class="badge bg-primary fs-6">{{ result.current_percentage }}%</span>
-                                        </li>
-                                    </ul>
+                    <div class="simulation-grid">
+                        <div class="sim-card">
+                            <span class="sim-label">Current Status</span>
+                            <strong>{{ result.current_percentage }}%</strong>
+                            <p>{{ result.current_attended }} attended / {{ result.current_total }} total</p>
+                        </div>
+                        <div class="sim-card interim-highlight">
+                            <span class="sim-label text-warning"><i class="fas fa-calendar-minus me-1"></i>Interim Forecast</span>
+                            <strong class="text-warning">{{ result.future_percentage }}%</strong>
+                            <p class="text-muted">After your planned future classes</p>
+                        </div>
+                        <div class="sim-card">
+                            <span class="sim-label">Final Projection</span>
+                            <strong>{{ result.final_percentage }}%</strong>
+                            <p>{{ result.final_attended }} attended / {{ result.final_total }} total</p>
+                        </div>
+                    </div>
+
+                    <div class="pathway-panel">
+                        <div class="pathway-head">
+                            <div>
+                                <h2>Technical Pathway</h2>
+                                <p>Current baseline -> planned future -> required recovery block.</p>
+                            </div>
+                            <span>{{ result.target_percentage }}% target</span>
+                        </div>
+
+                        <div class="pathway-steps">
+                            <div class="path-step">
+                                <span class="path-node"></span>
+                                <div>
+                                    <strong>Baseline</strong>
+                                    <p>{{ result.current_percentage }}% from existing attendance data.</p>
+                                </div>
+                            </div>
+                            <div class="path-step">
+                                <span class="path-node"></span>
+                                <div>
+                                    <strong>Planned Future</strong>
+                                    <p>{{ result.future_classes }} classes expected, {{ result.future_attendance }} planned to attend.</p>
+                                </div>
+                            </div>
+                            <div class="path-step">
+                                <span class="path-node success"></span>
+                                <div>
+                                    <strong>Recovery Block</strong>
+                                    <p>Attend {{ result.required_classes }} more classes, about {{ result.required_days }} day{% if result.required_days != 1 %}s{% endif %}, to reach the target.</p>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="col-md-6">
-                            <div class="card h-100 shadow-sm border-0 bg-light">
-                                <div class="card-body p-4">
-                                    <h5 class="card-title text-info border-bottom pb-2 mb-3"><i
-                                            class="fas fa-forward me-2"></i>Future Path</h5>
-                                    <ul class="list-unstyled mb-0">
-                                        <li class="d-flex justify-content-between mb-2">
-                                            <span class="text-muted">Expected Classes:</span>
-                                            <span class="fw-bold">{{ result.future_classes }}</span>
-                                        </li>
-                                        <li class="d-flex justify-content-between mb-2">
-                                            <span class="text-muted">Plan to Attend:</span>
-                                            <span class="fw-bold">{{ result.future_attendance }}</span>
-                                        </li>
-                                        <li
-                                            class="d-flex justify-content-between align-items-center pt-2 mt-2 border-top">
-                                            <span class="fw-bold">Interim %:</span>
-                                            <span class="badge bg-info fs-6">{{ result.future_percentage }}%</span>
-                                        </li>
-                                    </ul>
-                                </div>
+                        <div class="projection-bar">
+                            <div class="projection-labels">
+                                <span>Current {{ result.current_percentage }}%</span>
+                                <span>Final {{ result.final_percentage }}%</span>
                             </div>
-                        </div>
-
-                        <!-- Final Projection -->
-                        <div class="col-12 mt-4">
-                            <div class="card shadow border-success border-2">
-                                <div class="card-body p-4">
-                                    <h4 class="card-title text-success mb-4 text-center"><i
-                                            class="fas fa-flag-checkered me-2"></i>Final Projection Summary</h4>
-
-                                    <div class="row text-center mb-4">
-                                        <div class="col-4">
-                                            <p class="text-muted mb-1 small text-uppercase">Final Total</p>
-                                            <h3 class="fw-bold">{{ result.final_total }}</h3>
-                                        </div>
-                                        <div class="col-4 border-start border-end">
-                                            <p class="text-muted mb-1 small text-uppercase">Final Attended</p>
-                                            <h3 class="fw-bold">{{ result.final_attended }}</h3>
-                                        </div>
-                                        <div class="col-4">
-                                            <p class="text-muted mb-1 small text-uppercase">Final Target</p>
-                                            <h3 class="fw-bold text-success">{{ result.target_percentage }}%</h3>
-                                        </div>
-                                    </div>
-
-                                    <div class="px-md-5">
-                                        <div class="d-flex justify-content-between text-muted mb-1 fw-bold">
-                                            <span>Current ({{ result.current_percentage }}%)</span>
-                                            <span>Target ({{ result.target_percentage }}%)</span>
-                                        </div>
-                                        <div class="progress" style="height: 25px; border-radius: 15px;">
-                                            <div class="progress-bar bg-primary progress-bar-striped progress-bar-animated"
-                                                role="progressbar"
-                                                style="width: {{ '%.1f'|format(result.current_percentage) }}%"></div>
-                                            <div class="progress-bar bg-success" role="progressbar"
-                                                style="width: {{ '%.1f'|format(result.target_percentage - result.current_percentage) }}%">
-                                                +{{ result.required_classes }}
-                                            </div>
-                                        </div>
-                                    </div>
+                            <div class="progress">
+                                <div class="progress-bar bg-primary" role="progressbar"
+                                    style="width: {{ '%.1f'|format(result.current_percentage if result.current_percentage <= 100 else 100) }}%"></div>
+                                <div class="progress-bar bg-success progress-bar-striped progress-bar-animated" role="progressbar"
+                                    style="width: {{ '%.1f'|format((result.final_percentage - result.current_percentage) if result.final_percentage > result.current_percentage else 0) }}%">
                                 </div>
                             </div>
                         </div>
                     </div>
                     {% endif %}
+                {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-chart-line"></i>
+                    <h2>Awaiting simulation</h2>
+                    <p>Enter your future class plan and target percentage. The engine will return classes, days, interim percentage, and final projection.</p>
+                    <div class="mini-metrics">
+                        <span><strong>{{ user.total_classes }}</strong> total classes</span>
+                        <span><strong>{{ user.attended_classes }}</strong> attended</span>
+                        <span><strong>{{ "%.1f"|format(pct) }}%</strong> current</span>
+                    </div>
                 </div>
                 {% endif %}
             </div>
         </div>
     </div>
-</div>
+</section>
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const inputMode = document.getElementById('input_mode');
@@ -253,8 +247,8 @@ document.addEventListener('DOMContentLoaded', function() {
             expectedDays.value = 0;
             futureClassesCol.className = 'col-12';
             expectedDaysCol.className = 'd-none';
-            futureClassesCard.classList.add('border-primary', 'shadow-sm');
-            expectedDaysCard.classList.remove('border-primary', 'shadow-sm');
+            futureClassesCard.classList.add('is-active');
+            expectedDaysCard.classList.remove('is-active');
             futureAttendanceLabel.textContent = 'Expected Classes to Attend';
             futureAttendance.placeholder = 'e.g., 40';
             futureAttendanceHelp.textContent = 'How many of those future classes will you attend?';
@@ -262,11 +256,11 @@ document.addEventListener('DOMContentLoaded', function() {
             futureClasses.value = 0;
             expectedDaysCol.className = 'col-12';
             futureClassesCol.className = 'd-none';
-            expectedDaysCard.classList.add('border-primary', 'shadow-sm');
-            futureClassesCard.classList.remove('border-primary', 'shadow-sm');
+            expectedDaysCard.classList.add('is-active');
+            futureClassesCard.classList.remove('is-active');
             futureAttendanceLabel.textContent = 'Expected Days to Attend';
             futureAttendance.placeholder = 'e.g., 10';
-            futureAttendanceHelp.textContent = `How many of those future days will you attend? This will be converted using ${classesPerDay} classes per day.`;
+            futureAttendanceHelp.textContent = `How many of those future days will you attend? Converted using ${classesPerDay} classes per day.`;
         }
     }
 

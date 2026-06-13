@@ -40,26 +40,26 @@
                         <div id="calendar" style="cursor: pointer;"></div>
                         
                         <div class="mt-3 text-center text-muted">
-                            <small><i class="fas fa-info-circle"></i> Hover over any date to mark it absent or remove absent. Each absent date counts as 6 missed classes.</small>
+                            <small><i class="fas fa-info-circle"></i> Hover over today or a future date to mark it absent or remove absent. Past dates cannot be selected. Each absent date counts as 6 missed classes.</small>
                         </div>
                     </div>
                     
                     <div class="col-md-4">
                         <!-- Live Attendance Display -->
-                        <div class="card mb-3 border-0 bg-primary text-white">
+                        <div class="card mb-3 border-0 card-current-attendance">
                             <div class="card-body text-center">
-                                <h5 class="card-title">Current Attendance</h5>
-                                <h2 class="display-4" id="currentAttendanceDisplay">0%</h2>
-                                <p class="mb-0" id="attendanceDetails">Total: 0 | Attended: 0</p>
+                                <h5 class="card-title"><i class="fas fa-chart-pie me-2"></i>Current Attendance</h5>
+                                <h2 class="display-4 fw-bold" id="currentAttendanceDisplay">0%</h2>
+                                <p class="mb-0 small opacity-75" id="attendanceDetails">Total: 0 | Attended: 0</p>
                             </div>
                         </div>
 
                         <!-- Predicted Attendance After Absents -->
-                        <div class="card mb-3 border-0 bg-warning">
+                        <div class="card mb-3 border-0" id="predictedAttendanceCard">
                             <div class="card-body text-center">
-                                <h5 class="card-title">After Marked Absents</h5>
-                                <h2 class="display-4" id="predictedAttendanceDisplay">0%</h2>
-                                <p class="mb-0" id="predictedDetails">Total: 0 | Attended: 0</p>
+                                <h5 class="card-title"><i class="fas fa-calendar-minus me-2"></i>After Marked Absents</h5>
+                                <h2 class="display-4 fw-bold" id="predictedAttendanceDisplay">0%</h2>
+                                <p class="mb-0 small opacity-75" id="predictedDetails">Total: 0 | Attended: 0</p>
                             </div>
                         </div>
 
@@ -116,6 +116,7 @@
 <!-- Hidden inputs for data passing -->
 <input type="hidden" id="savedLeaveDates" value='{{ leave_dates|tojson|safe }}'>
 <input type="hidden" id="savedAttendance" value='{"total": {{ user.total_classes }}, "attended": {{ user.attended_classes }}}'>
+<input type="hidden" id="todayDate" value="{{ today_date }}">
 
 <!-- Confirmation Modal for Clear All -->
 <div class="modal fade" id="clearAllModal" tabindex="-1" aria-labelledby="clearAllModalLabel" aria-hidden="true">
@@ -153,6 +154,20 @@
     background-color: rgba(255, 193, 7, 0.1) !important;
 }
 
+.fc-daygrid-day.calendar-past-day,
+.fc-daygrid-day.calendar-past-day:hover {
+    background-color: rgba(108, 117, 125, 0.08) !important;
+    cursor: not-allowed !important;
+}
+
+.calendar-past-day .fc-daygrid-day-number {
+    color: #adb5bd !important;
+}
+
+.calendar-past-day .fc-daygrid-day-frame {
+    opacity: 0.65;
+}
+
 .fc-day-today {
     background-color: rgba(13, 110, 253, 0.05) !important;
 }
@@ -160,17 +175,6 @@
 .fc-daygrid-day-frame {
     position: relative;
     min-height: 90px;
-}
-
-.calendar-today-pill {
-    font-size: 0.68rem;
-    line-height: 1;
-    padding: 0.2rem 0.45rem;
-    border-radius: 999px;
-    background: #0d6efd;
-    color: #fff;
-    font-weight: 700;
-    margin-left: 0.35rem;
 }
 
 .calendar-day-action {
