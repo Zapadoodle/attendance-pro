@@ -353,11 +353,8 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function saveLeaves() {
-        fetch('/api/save-leave-dates', {
+        csrfSafeFetch('/api/save-leave-dates', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
             body: JSON.stringify({ dates: absentDates })
         })
         .then(response => response.json())

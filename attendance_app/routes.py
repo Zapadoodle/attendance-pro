@@ -169,6 +169,21 @@ def save_leave_dates():
         db.session.rollback()
         return jsonify({'status': 'error', 'message': str(e)}), 500
 
+@bp.route('/api/calculate-prediction', methods=['POST'])
+def api_calculate_prediction():
+    data = request.get_json()
+    if not data:
+        return jsonify({'error': 'No data provided'}), 400
+    total = int(data.get('total_classes', 0))
+    attended = int(data.get('attended_classes', 0))
+    future = int(data.get('future_classes', 0))
+    future_att = int(data.get('future_attendance', 0))
+    target = float(data.get('target_percentage', 75))
+    result = AttendanceCalculator.calculate_required_classes(
+        total, attended, future, future_att, target
+    )
+    return jsonify(result)
+
 @bp.route('/api/save-attendance', methods=['POST'])
 def save_attendance():
     """Save manually adjusted global attendance from the calendar"""

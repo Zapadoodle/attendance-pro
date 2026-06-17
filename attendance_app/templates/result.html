@@ -48,10 +48,10 @@
                                     
                                     <p><strong>After attending {{ result.required_classes }} more classes:</strong></p>
                                     <ul>
-                                        <li>New Total: {{ result.new_total_classes }} classes</li>
-                                        <li>New Attended: {{ result.new_attended_classes }} classes</li>
+                                        <li>New Total: {{ result.final_total }} classes</li>
+                                        <li>New Attended: {{ result.final_attended }} classes</li>
                                         <li>New Percentage: 
-                                            <span class="badge bg-success">{{ result.new_percentage }}%</span>
+                                            <span class="badge bg-success">{{ result.final_percentage }}%</span>
                                         </li>
                                     </ul>
                                 {% endif %}
@@ -77,15 +77,15 @@
                         </div>
                         
                         {% if not result.error %}
-                        <p class="mb-2">After Required Classes: {{ result.new_percentage }}%</p>
+                        <p class="mb-2">After Required Classes: {{ result.final_percentage }}%</p>
                         <div class="progress" style="height: 30px;">
                             <div class="progress-bar bg-success" 
                                  role="progressbar" 
-                                 style="width: {{ result.new_percentage }}%;"
-                                 aria-valuenow="{{ result.new_percentage }}" 
+                                 style="width: {{ result.final_percentage }}%;"
+                                 aria-valuenow="{{ result.final_percentage }}" 
                                  aria-valuemin="0" 
                                  aria-valuemax="100">
-                                {{ result.new_percentage }}%
+                                {{ result.final_percentage }}%
                             </div>
                         </div>
                         {% endif %}

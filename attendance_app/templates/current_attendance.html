@@ -66,6 +66,7 @@
                         <div class="collapse mt-3" id="manualUpdateForm">
                             <div class="card card-body border-0 bg-light p-4">
                                 <form method="POST">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"> 
                                     <div class="row g-3">
                                         <div class="col-sm-6 text-start">
                                             <label class="form-label fw-bold small text-muted">Total Classes</label>

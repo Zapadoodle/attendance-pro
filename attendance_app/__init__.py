@@ -1,19 +1,30 @@
 from flask import Flask
 from config import Config
-from .models import db, LeaveDate, Timetable, AttendanceLog, get_public_user
+from .models import db, LeaveDate, Timetable, AttendanceLog, User, get_public_user
 from flask_apscheduler import APScheduler
+from flask_login import LoginManager
+from flask_wtf.csrf import CSRFProtect
 import datetime
 
 scheduler = APScheduler()
+csrf = CSRFProtect()
+login_manager = LoginManager()
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
+
+login_manager.login_view = 'auth.login'
 
 def create_app(config_class=Config):
     app = Flask(__name__)
     app.config.from_object(config_class)
-    app.secret_key = Config.SECRET_KEY
     app.config['SESSION_TYPE'] = 'filesystem'
     
     # Initialize extensions
     db.init_app(app)
+    csrf.init_app(app)
+    login_manager.init_app(app)
     
     with app.app_context():
         db.create_all()
@@ -21,7 +32,9 @@ def create_app(config_class=Config):
     
     # Register blueprints/routes
     from attendance_app import routes
+    from attendance_app import auth
     app.register_blueprint(routes.bp)
+    app.register_blueprint(auth.bp)
     
     if app.config.get('SCHEDULER_ENABLED', True):
         # Initialize Scheduler

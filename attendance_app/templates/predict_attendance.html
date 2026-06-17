@@ -24,6 +24,9 @@
     <div class="row g-4 align-items-start">
         <div class="col-lg-5">
             <form method="POST" id="predictForm" class="predict-panel">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" id="total_classes" value="{{ user.total_classes }}">
+                <input type="hidden" id="attended_classes" value="{{ user.attended_classes }}">
                 <div class="panel-section">
                     <div class="section-heading">
                         <span class="step-dot">1</span>

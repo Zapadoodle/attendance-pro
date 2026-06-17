@@ -83,11 +83,8 @@ document.addEventListener('DOMContentLoaded', function() {
 // API call function (updated)
 async function calculateViaAPI(total, attended, futureClasses, futureAttendance, target) {
     try {
-        const response = await fetch('/api/calculate-prediction', {
+        const response = await csrfSafeFetch('/api/calculate-prediction', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
             body: JSON.stringify({
                 total_classes: total,
                 attended_classes: attended,

@@ -37,7 +37,7 @@ class Timetable(db.Model):
 
 class AttendanceLog(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    date = db.Column(db.Date, nullable=False, default=datetime.utcnow().date)
+    date = db.Column(db.Date, nullable=False, default=lambda: datetime.utcnow().date())
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     
     __table_args__ = (db.UniqueConstraint('date', 'user_id', name='_date_user_uc'),)

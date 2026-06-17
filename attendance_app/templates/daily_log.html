@@ -73,6 +73,7 @@
                                                 {{ entry.class_label or 'Class' }}
                                             </span>
                                             <form method="POST" action="{{ url_for('attendance.delete_timetable_entry', entry_id=entry.id) }}" class="m-0" onsubmit="return confirm('Remove this class?');">
+                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                                 <button type="submit" class="btn btn-outline-danger btn-sm border py-2 px-2 rounded-end">
                                                     <i class="fas fa-times"></i>
                                                 </button>
@@ -99,6 +100,7 @@
             </div>
             <div class="card-body p-4">
                 <form method="POST">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <div class="mb-4">
                         <label class="form-label fw-bold small text-uppercase text-muted">Day of week</label>
                         <select name="day_of_week" class="form-select border-0 bg-light py-2" required>
@@ -131,9 +133,8 @@ document.addEventListener('DOMContentLoaded', function() {
     if (logBtn) {
         logBtn.addEventListener('click', function() {
             if (confirm('Check-in for today\'s classes? This will update your attendance immediately.')) {
-                fetch('/api/log-attendance', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' }
+                csrfSafeFetch('/api/log-attendance', {
+                    method: 'POST'
                 })
                 .then(res => res.json())
                 .then(data => {
