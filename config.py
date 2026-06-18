@@ -1,10 +1,11 @@
 import os
-import secrets
 import tempfile
 from pathlib import Path
 
 class Config:
-    SECRET_KEY = os.environ.get('SECRET_KEY') or secrets.token_hex(16)
+    SECRET_KEY = os.environ.get('SECRET_KEY')
+    if not SECRET_KEY:
+        SECRET_KEY = 'attendance-pro-default-dev-key-change-in-production'
     if os.environ.get('DATABASE_URL'):
         SQLALCHEMY_DATABASE_URI = os.environ['DATABASE_URL'].replace(
             'postgres://',
