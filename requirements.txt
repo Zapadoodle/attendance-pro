@@ -5,4 +5,3 @@ Flask-Login==0.6.3
 Flask-WTF==1.2.1
 Werkzeug==3.0.1
 Flask-APScheduler==1.13.1
-pg8000==1.31.2

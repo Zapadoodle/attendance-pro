@@ -1,20 +1,30 @@
-from flask import Blueprint, render_template, request, jsonify, redirect, url_for, flash
+from flask import Blueprint, render_template, request, jsonify, redirect, url_for, flash, session
 from .models import AttendanceCalculator, db, LeaveDate, Timetable, AttendanceLog, get_public_user
 from datetime import datetime
+import os
 
 bp = Blueprint('attendance', __name__)
+
+def sync_user():
+    user = get_public_user()
+    if os.environ.get('VERCEL'):
+        if 'total_classes' in session:
+            user.total_classes = session['total_classes']
+        if 'attended_classes' in session:
+            user.attended_classes = session['attended_classes']
+    return user
 
 @bp.route('/')
 def index():
     """Landing page with 3 interface options"""
-    return render_template('index.html', user=get_public_user())
+    return render_template('index.html', user=sync_user())
 
 # Removed subject routes
 
 @bp.route('/current-attendance', methods=['GET', 'POST'])
 def current_attendance():
     """Interface 1: Check and update current global attendance percentage"""
-    user = get_public_user()
+    user = sync_user()
     if request.method == 'POST':
         total = request.form.get('total_classes')
         attended = request.form.get('attended_classes')
@@ -24,6 +34,9 @@ def current_attendance():
                 user.total_classes = int(total)
                 user.attended_classes = int(attended)
                 db.session.commit()
+                if os.environ.get('VERCEL'):
+                    session['total_classes'] = user.total_classes
+                    session['attended_classes'] = user.attended_classes
                 flash('Attendance updated successfully!', 'success')
             except ValueError:
                 flash('Please enter valid numbers.', 'error')
@@ -37,7 +50,7 @@ def current_attendance():
 @bp.route('/predict-attendance', methods=['GET', 'POST'])
 def predict_attendance():
     """Interface 2: Predict classes needed to reach target percentage globally"""
-    user = get_public_user()
+    user = sync_user()
     classes_per_day = 6
     
     if request.method == 'POST':
@@ -133,7 +146,7 @@ def predict_attendance():
 
 @bp.route('/leave-calendar')
 def leave_calendar():
-    user = get_public_user()
+    user = sync_user()
     leaves = LeaveDate.query.filter_by(user_id=user.id).all()
     leave_dates = [leave.date.isoformat() for leave in leaves]
     return render_template('leave_calendar.html', 
@@ -143,7 +156,7 @@ def leave_calendar():
 
 @bp.route('/api/save-leave-dates', methods=['POST'])
 def save_leave_dates():
-    user = get_public_user()
+    user = sync_user()
     data = request.get_json()
     if not data or 'dates' not in data:
         return jsonify({'status': 'error', 'message': 'No dates provided'}), 400
@@ -187,18 +200,21 @@ def api_calculate_prediction():
 @bp.route('/api/save-attendance', methods=['POST'])
 def save_attendance():
     """Save manually adjusted global attendance from the calendar"""
-    user = get_public_user()
+    user = sync_user()
     data = request.get_json()
     if data:
         user.total_classes = int(data.get('total', user.total_classes))
         user.attended_classes = int(data.get('attended', user.attended_classes))
         db.session.commit()
+        if os.environ.get('VERCEL'):
+            session['total_classes'] = user.total_classes
+            session['attended_classes'] = user.attended_classes
     return jsonify({'status': 'success', 'message': 'Attendance tracked in DB'})
 
 @bp.route('/daily-log', methods=['GET', 'POST'])
 def daily_log():
     """Interface to manage weekly schedule and log daily attendance"""
-    user = get_public_user()
+    user = sync_user()
     if request.method == 'POST':
         class_label = request.form.get('class_label', 'Class')
         day_of_week = request.form.get('day_of_week')
@@ -239,7 +255,7 @@ def daily_log():
 @bp.route('/api/log-attendance', methods=['POST'])
 def log_attendance():
     """Manually check-in for today's classes"""
-    user = get_public_user()
+    user = sync_user()
     today = datetime.now().date()
     day_of_week = today.weekday()
     
@@ -262,6 +278,9 @@ def log_attendance():
     
     try:
         db.session.commit()
+        if os.environ.get('VERCEL'):
+            session['total_classes'] = user.total_classes
+            session['attended_classes'] = user.attended_classes
         return jsonify({'status': 'success', 'message': f'Successfully logged {classes_today} classes!'})
     except Exception as e:
         db.session.rollback()
@@ -269,7 +288,7 @@ def log_attendance():
 
 @bp.route('/timetable/<int:entry_id>/delete', methods=['POST'])
 def delete_timetable_entry(entry_id):
-    user = get_public_user()
+    user = sync_user()
     entry = Timetable.query.get_or_404(entry_id)
     if entry.user_id == user.id:
         db.session.delete(entry)
