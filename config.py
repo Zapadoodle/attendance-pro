@@ -9,7 +9,11 @@ class Config:
     if os.environ.get('DATABASE_URL'):
         SQLALCHEMY_DATABASE_URI = os.environ['DATABASE_URL'].replace(
             'postgres://',
+            'postgresql+pg8000://',
+            1
+        ).replace(
             'postgresql://',
+            'postgresql+pg8000://',
             1
         )
     elif os.environ.get('VERCEL'):
